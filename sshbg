@@ -48,9 +48,11 @@ def get_colors(config, hostname):
         for match_re, profile_name in config["hostnames"].items():
             if re.match(match_re, hostname) is not None:
                 bg_color_host = config["profiles"][profile_name]
+                sys.stderr.write("sshbg: using profile '%s'\n" % (profile_name))
                 break
 
     if bg_color_host is None:
+        sys.stderr.write("sshbg: No profile found for '%s'\n" % (hostname))
         return None
 
     return (
@@ -91,7 +93,9 @@ def is_interactive(pid, hostname):
 
     # Remote execute command or ProxyForward with netcat
     if rest_args != [""]:
-        return False
+        # sys.stderr.write("sshbg: Found rest_args '%s'\n" %(' '.join(rest_args)))
+        return True
+        # return False
 
     return True
 
@@ -130,9 +134,11 @@ if __name__ == "__main__":
         # Verify that this is not a forwarding connection.
         if not is_interactive(ssh_pid, hostname):
             # Don't do anything or SSH will wait for our forked child.
+            sys.stderr.write("sshbg: No interactive session\n")
             sys.exit(0)
 
         # Write out the ANSI escape seq to change background color
+        sys.stderr.write("sshbg: Found interactive session. Changing bg color.\n")
         sys.stdout.write(bg_esc_host)
 
         # Fork into the background so we can wait for the ssh process to exit.
